@@ -1,0 +1,26 @@
+@startuml
+
+BatchJobsManager "1" *-- "many" BatchAccountManager
+BatchAccountManager "1" *-- "1" BatchEventManager
+BatchAccountManager "1" *--* "1" BatchTaskManager
+BatchAccountManager "1" *--* "many" BatchJobHandler
+BatchAccountManager "1" *--* "1" BatchStorageManager
+
+BatchEventManager "1" *-- "1" EventListener
+
+
+class EventHubBasedListener<? extends EventListener> {
+
+}
+class PollingBasedListener<? extends EventListener> {
+
+}
+EventHubBasedListener *- EventListener
+PollingBasedListener *- EventListener
+
+BatchStorageManager "1" *-- "1" BatchJobRunService
+BatchStorageManager "1" *-- "1" BatchJobRunLockService
+BatchStorageManager "1" *-- "1" BatchPollTaskService
+BatchStorageManager "1" *-- "1" BatchJobMsgCheckpointService
+
+@enduml

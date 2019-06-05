@@ -1,0 +1,57 @@
+@startuml
+|Consumer application|
+start
+:get plugin from BatchJobsManager
+using **service identifier** and **job**;
+:create batchJobRun entity;
+|#7F7FD5|Azure Batch Account|
+:store batchJobRun entity in storage table;
+:return task id;
+|Consumer application|
+:generate input files for application to consume;
+:run task;
+|Azure Batch Account|
+:store the input files to blob storage;
+note right
+  The files are stored under
+  container name "[taskId]-input-files"
+end note
+:create task;
+note right
+  When the task is created, its
+  state is set to active where it is
+  waiting for the node to be available in pool
+end note
+while (is node available in pool?) is (not available)
+  :wait for pool re-scale period;
+endwhile (available)
+:execute task;
+
+if (task completed?) then (yes)
+	:store VM output to blob storage;
+endif
+
+|#86A8E7|Azure Event Hub|
+:notify task state change;
+:push messages to queues;
+|Consumer application|
+:receive message;
+:extract events from message;
+:forward events to plugins;
+|Azure Batch Account|
+:create batchJobRunLock entity;
+|Consumer application|
+if (lock acquired for event by client?) then (yes)
+  :process event;
+  :execute hooks associated with the events;
+else (no)
+  :event already processed so do nothing;
+endif
+:update task state;
+|Azure Batch Account|
+:update batchJobRun entity;
+
+
+
+stop
+@enduml

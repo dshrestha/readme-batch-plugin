@@ -1,0 +1,27 @@
+@startuml
+
+artifact ConsumerApp
+
+rectangle "BatchJobManager"  {
+	rectangle Plugins {
+        rectangle "PluginForJobA"
+        rectangle "PluginForJobB"
+        rectangle "PluginForJobC"
+    }
+	rectangle "EventListener"
+	EventListener ..> PluginForJobA : events on tasks for Job A
+	EventListener ..> PluginForJobB : events on tasks for Job B
+	EventListener ..> PluginForJobC : events on tasks for Job C
+}
+
+cloud "MessageHub"
+cloud "BatchAccount"
+
+ConsumerApp --> PluginForJobA : invoke action(create/remove/stop)
+ConsumerApp --> PluginForJobB : invoke action(create/remove/stop)
+ConsumerApp --> PluginForJobC : invoke action(create/remove/stop)
+BatchAccount ..> MessageHub : message
+EventListener <--> MessageHub : message
+Plugins --> BatchAccount : task operation(create/stop/remove)
+
+@enduml
